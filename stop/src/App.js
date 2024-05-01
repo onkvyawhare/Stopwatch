@@ -1,46 +1,58 @@
-import {useState,useEffect} from "react";
- 
-function Stopwatch() {
 
-  const [elapsedTime,setElapsedTime]=useState(0);
-  const[isrunning,setIsRunning]=useState(false);
+import { useState } from "react";
 
-  const formatTime=(seconds)=>{
-    const mins=Math.floor(seconds/60);
-    const remainingseconds=seconds%60;
-    return `${mins}:${remainingseconds < 10 ? "0":""}${remainingseconds}`
+function App() {
+  const [curTime, setCurTime] = useState(0);
+  const [toggle, setToggle] = useState("Start");
+  const [reset, setReset] = useState(false);
+
+  const [intervalId, setIntervalId] = useState(null);
+
+  const handleWatch = (id) => {
+    toggle === "Start" ? setToggle("Stop") : setToggle("Start");
+    if (!id) {
+      const timer = setInterval(() => {
+        setCurTime((prev) => prev + 1);
+      }, 1000);
+      setIntervalId(timer);
+    } else {
+      clearInterval(id);
+      setIntervalId(null);
+    }
   };
 
-  const startStop=()=>{
-    setIsRunning(!isrunning);
-  }
-
-  const reset=()=>{
-    setIsRunning(false);
-    setElapsedTime(0);
-  }
-
-  useEffect(() => {
-    let IntervalId;
-    if(isrunning){
-      IntervalId=setInterval(()=>{
-        setElapsedTime((prev)=>prev+1);
-      },1000)
+  const handleReset = (id) => {
+    setCurTime(0);
+    setToggle("Start");
+    if (id) {
+      clearInterval(id);
+      setIntervalId(null);
     }
+  };
 
-    return() => clearTimeout(IntervalId);
-  
-    
-  }, [isrunning]);
-  
+  const formatted = () => {
+    let minutes = Math.floor(Number(curTime) / 60);
+    let seconds = Number(curTime) % 60;
+    // if (String(minutes).length < 2) minutes = "0" + String(minutes);
+    if (String(seconds).length < 2) seconds = "0" + String(seconds);
+
+    return `${minutes}:${seconds}`; //60 + ' ' +;
+  };
+
   return (
-    <div >
-     <h1>Stopwatch</h1> 
-     <p>Time:{formatTime(elapsedTime)}</p>
-     <button onClick={startStop}>{isrunning ? "Stop":"Start"}</button>
-     <button onClick={reset}>Reset</button>
+    <div className="App">
+      <h1>Stopwatch</h1>
+      <div className="time">Time: {formatted()}</div>
+      <div>
+        <button type="button" onClick={() => handleWatch(intervalId)}>
+          {toggle}
+        </button>
+        <button type="button" onClick={() => handleReset(intervalId)}>
+          Reset
+        </button>
+      </div>
     </div>
   );
 }
 
-export default Stopwatch;
+export default App;
