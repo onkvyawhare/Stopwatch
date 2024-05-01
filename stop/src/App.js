@@ -1,58 +1,55 @@
 
-import { useState } from "react";
+import {useState, useEffect} from "react";
+ 
+function Stopwatch() {
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+  const [startTime, setStartTime] = useState(null);
 
-function App() {
-  const [curTime, setCurTime] = useState(0);
-  const [toggle, setToggle] = useState("Start");
-  const [reset, setReset] = useState(false);
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${mins}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
+  };
 
-  const [intervalId, setIntervalId] = useState(null);
-
-  const handleWatch = (id) => {
-    toggle === "Start" ? setToggle("Stop") : setToggle("Start");
-    if (!id) {
-      const timer = setInterval(() => {
-        setCurTime((prev) => prev + 1);
-      }, 1000);
-      setIntervalId(timer);
+  const startStop = () => {
+    if (isRunning) {
+      setIsRunning(false);
+      setElapsedTime((Date.now() - startTime) / 1000); // Calculate elapsed time
     } else {
-      clearInterval(id);
-      setIntervalId(null);
+      setIsRunning(true);
+      setStartTime(Date.now()); // Record start time
     }
   };
 
-  const handleReset = (id) => {
-    setCurTime(0);
-    setToggle("Start");
-    if (id) {
-      clearInterval(id);
-      setIntervalId(null);
+  const reset = () => {
+    setIsRunning(false);
+    setElapsedTime(0);
+    setStartTime(null);
+  };
+
+  useEffect(() => {
+    let intervalId;
+    if (isRunning) {
+      intervalId = setInterval(() => {
+        setElapsedTime((Date.now() - startTime) / 1000); // Calculate elapsed time
+      }, 1000);
+    } else {
+      clearInterval(intervalId); // Clear the interval
     }
-  };
 
-  const formatted = () => {
-    let minutes = Math.floor(Number(curTime) / 60);
-    let seconds = Number(curTime) % 60;
-    // if (String(minutes).length < 2) minutes = "0" + String(minutes);
-    if (String(seconds).length < 2) seconds = "0" + String(seconds);
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
 
-    return `${minutes}:${seconds}`; //60 + ' ' +;
-  };
+  }, [isRunning, startTime]);
 
   return (
-    <div className="App">
+    <div>
       <h1>Stopwatch</h1>
-      <div className="time">Time: {formatted()}</div>
-      <div>
-        <button type="button" onClick={() => handleWatch(intervalId)}>
-          {toggle}
-        </button>
-        <button type="button" onClick={() => handleReset(intervalId)}>
-          Reset
-        </button>
-      </div>
+      <p>Time: {formatTime(elapsedTime)}</p>
+      <button onClick={startStop}>{isRunning ? "Stop" : "Start"}</button>
+      <button onClick={reset}>Reset</button>
     </div>
   );
 }
 
-export default App;
+export default Stopwatch;
